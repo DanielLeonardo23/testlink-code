@@ -14,13 +14,18 @@ RUN apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Extensiones PHP necesarias para TestLink
-RUN docker-php-ext-install mysqli pdo_mysql pgsql pdo_pgsql && \
-    docker-php-ext-enable mysqli pdo_mysql pgsql pdo_pgsql && \
-    docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install gd
+RUN docker-php-ext-install mysqli pdo_mysql pgsql pdo_pgsql gd && \
+    docker-php-ext-enable mysqli pdo_mysql pgsql pdo_pgsql gd
 
 # Limpiar
 RUN apt-get clean
+
+# Configurar ServerName para evitar advertencia
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Crear directorios necesarios dentro del contenedor y asignar permisos adecuados
+RUN mkdir -p /app/testlink-logs /app/testlink-upload-area \
+    && chown -R www-data:www-data /app/testlink-logs /app/testlink-upload-area
 
 # Configuración del entorno
 WORKDIR /var/www/html
