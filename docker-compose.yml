@@ -1,21 +1,8 @@
 networks: 
   testlink:
     name: testlink
-services:
-  db:
-    image: mysql:8.3.0
-    networks:
-    - testlink
-    restart: unless-stopped
-    user: mysql
-    environment:
-    - MYSQL_USER=teste
-    - MYSQL_PASSWORD=teste
-    - MYSQL_ROOT_PASSWORD=teste
-    - MYSQL_DATABASE=testlink
-    volumes:
-    - mysql:/var/lib/mysql
 
+services:
   maildev:
     image: maildev/maildev:latest
     networks:
@@ -25,14 +12,12 @@ services:
     - 1025:1025
     restart: unless-stopped
     environment:
-    - NODE_TLS_REJECT_UNAUTHORIZED=0
+    - NODE_TLS_REJECT_UNAUTHORIZED:0
 
-  app: &app
+  app:
     build: .
     restart: unless-stopped
     depends_on:
-      db:
-        condition: service_started
       maildev:
         condition: service_started
     networks:
@@ -42,17 +27,14 @@ services:
     volumes:
       - ./logs:/var/testlink/logs:Z
       - ./upload_area:/var/testlink/upload_area:Z
+    # --- VARIABLES DE ENTORNO PARA CONECTAR A POSTGRESQL EN RENDER ---
+    environment:
+      - TESTLINK_DB_TYPE=postgres
+      - TESTLINK_DB_HOST=dpg-d3dkatogjchc73akcii0-a.oregon-postgres.render.com
+      - TESTLINK_DB_PORT=5432
+      - TESTLINK_DB_USER=teslink_user
+      - TESTLINK_DB_PASSWORD=2VYR09sytPPXl3Dl08QUK1tHfaw6sLXc
+      - TESTLINK_DB_NAME=teslink
+      - TESTLINK_SMTP_HOST=maildev
 
-  restore:
-    <<: *app
-    depends_on:
-      app:
-        condition: service_started
-    restart: no
-    ports: []
-    profiles:
-    - tools
-    command: ['/bin/bash', '-c', 'cd ./docs/db_sample && ./restore_sample.sh']
-
-volumes:
-  mysql:
+# Se eliminaron los servicios 'db' y 'restore', y el volumen 'mysql'.
